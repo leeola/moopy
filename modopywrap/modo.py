@@ -1,17 +1,27 @@
 ''''''
 
 # Standard
+import sys
 # Related
+import lx
 # Local
 import errors
 
 
-def check_modo():
-    '''Run through a series of tests to make sure ModoPyWrap is able to
-    interact properly with modo.'''
+def initialize_modo_connection():
+    '''Initializing ModoPyWrap will set a few things up for the lib, such as
+    rerouting stdout into modo.'''
     
-    # First we import some modo libraries, and see if it raises any errors.
-    try:
-        import lx
-    except ImportError:
-        raise errors.ModoLibrariesNotFound()
+    # Reroute stdout to modo printing.
+    sys.stdout = ModoPrinter()
+
+class ModoPrinter(object):
+    '''The purpose of this class is to be given to sys.stdout so that standard
+    prints will be given to modo.
+    '''
+    
+    def write(self, content_to_write):
+        '''
+        '''
+        if content_to_write and content_to_write != '\n':
+            lx.out('MPW: "%s"' % content_to_write)
