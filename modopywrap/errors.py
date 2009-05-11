@@ -5,13 +5,13 @@
 # Local
 
 
-class ModoWrapperError(Exception):
+class ModoPyWrapError(Exception):
     '''The base Modo Wrapper error.
     '''
     pass
 
     
-class ModoLibrariesNotFound(ModoWrapperError):
+class ModoLibrariesNotFound(ModoPyWrapError):
     '''The libraries provided by an instance of modo were not found.
     '''
     pass

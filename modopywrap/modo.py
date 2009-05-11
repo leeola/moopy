@@ -7,7 +7,7 @@ import errors
 
 
 def check_modo():
-    '''Run through a series of tests to make sure modo_wrapper is able to
+    '''Run through a series of tests to make sure ModoPyWrap is able to
     interact properly with modo.'''
     
     # First we import some modo libraries, and see if it raises any errors.

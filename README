@@ -4,7 +4,7 @@ WARNING:
 
 INSTALLATION:
     Installing MPW is pretty simple. Simply download ModoPyWrap, unzip it, and
-    put the modo_wrapper folder into the following OS specific directories:
+    put the modopywrap folder into the following OS specific directories:
     
     - OSX: ~/Library/Application\ Support/Luxology/Scripts
     - Windows: C:\Documents and Settings\YourUserName\Application Data\Luxology\Scripts
