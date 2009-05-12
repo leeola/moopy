@@ -14,3 +14,7 @@ modopywrap.modo_session.initialize()
 # Now we print. The basic print is routed into modo's event logger. This is done
 # at the initialization stage above.
 print 'Hello World!'
+
+# Here we say hello, in the logger! (With critical importance)
+import logging
+logging.critical('Hello World!')
