@@ -12,3 +12,9 @@ INSTALLATION:
 EXAMPLES:
     All the files in the ./examples folder are ment to be run directly by modo.
     These are designed to show you examples of how to use ModoPyWrap.
+
+DOCUMENTATION:
+    Documentation will be slightly handled by the examples. There will be API
+    docs generated from Epydocs, but any further documentation outside of
+    examples and api docs will be done by the community and is not planned at
+    this time.
