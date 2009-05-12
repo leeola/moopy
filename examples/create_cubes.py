@@ -4,7 +4,6 @@ future it will be expanded to create a small array of cubes showing different
 features of modopywrap.'''
 
 # Be a good boy, and do this at the beginning.
-import modopywrap.modo_connection
-modopywrap.modo_connection.initialize()
-
+import modopywrap.modo_session
+modopywrap.modo_session.initialize()
 
