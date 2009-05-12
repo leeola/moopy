@@ -10,7 +10,6 @@ class ModoPyWrapError(Exception):
     '''
     pass
 
-    
 class ModoLibrariesNotFound(ModoPyWrapError):
     '''The libraries provided by an instance of modo were not found.
     '''

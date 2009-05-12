@@ -9,8 +9,6 @@ import errors
 def check_modo():
     '''Run through a series of tests to make sure ModoPyWrap is able to
     interact properly with modo.
-    
-    @note: This function is put here so that the rest of the library can
     '''
     
     # First we import some modo libraries, and see if it raises any errors.
@@ -20,5 +18,6 @@ def check_modo():
         raise errors.ModoLibrariesNotFound()
 
 if __name__ != '__main__':
-    # If the library is being imported, run the check function.
+    # If the package is being imported, run the check function.
+    # The result of this, is that a check 'should' always occur
     check_modo()
