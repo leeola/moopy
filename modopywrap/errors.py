@@ -15,3 +15,17 @@ class ModoLibrariesNotFound(ModoPyWrapError):
     '''
     pass
 
+class InvalidArgumentSupplied(ModoPyWrapError):
+    '''The arguments from modo given to a user script are formatted incorrectly.
+    '''
+
+    def __init__(self, message):
+        '''
+        '''
+        
+        self.message = message
+    
+    def __str__(self):
+        '''
+        '''
+        return '\n%s' % self.message
