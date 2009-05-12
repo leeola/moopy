@@ -107,6 +107,8 @@ def initialize(mpw_loglvl=logging.WARNING, mpw_logfile=None,
         
         mpw_file_handler.setFormatter(mpw_file_formatter)
         mpw_logger.addHandler(mpw_file_handler)
+    
+    mpw_logger.debug('Session initialization complete.')
         
 
 class SessionInfo(object):
