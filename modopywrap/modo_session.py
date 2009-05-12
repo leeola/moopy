@@ -45,20 +45,21 @@ def initialize(mpw_loglvl=logging.WARNING, mpw_logfile=None,
         'critical': logging.CRITICAL
     }
     
-    # Now we set the mpw log level. If the user defined one, use his.
-    if session_info.keyword_arguments.has_key('mpw_loglvl'):
-        mpw_loglvl = log_levels[
-            session_info.keyword_arguments['mpw_loglvl'].lower()]
-    # If the user defined a file to log to, grab that value.
-    if session_info.keyword_arguments.has_key('mpw_logfile'):
-        mpw_logfile = session_info.keyword_arguments['mpw_logfile']
-    
-    # The same as above, except for the root logger, aka, the script logger.
-    if session_info.keyword_arguments.has_key('loglvl'):
-        loglvl = log_levels[
-            session_info.keyword_arguments['loglvl'].lower()]
-    if session_info.keyword_arguments.has_key('logfile'):
-        logfile = session_info.keyword_arguments['logfile']
+    if session_info.keyword_arguments is not None:
+        # Now we set the mpw log level. If the user defined one, use his.
+        if session_info.keyword_arguments.has_key('mpw_loglvl'):
+            mpw_loglvl = log_levels[
+                session_info.keyword_arguments['mpw_loglvl'].lower()]
+        # If the user defined a file to log to, grab that value.
+        if session_info.keyword_arguments.has_key('mpw_logfile'):
+            mpw_logfile = session_info.keyword_arguments['mpw_logfile']
+        
+        # The same as above, except for the root logger, aka, the script logger.
+        if session_info.keyword_arguments.has_key('loglvl'):
+            loglvl = log_levels[
+                session_info.keyword_arguments['loglvl'].lower()]
+        if session_info.keyword_arguments.has_key('logfile'):
+            logfile = session_info.keyword_arguments['logfile']
     
     # Create/get both the mpw and script loggers
     script_logger = logging.getLogger()
