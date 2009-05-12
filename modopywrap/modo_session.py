@@ -37,9 +37,6 @@ def initialize(mpw_loglvl=logging.WARNING, mpw_logfile=None,
     global session_info
     session_info = SessionInfo()
     
-    print 'Args? "%s"' % session_info.arguments
-    print 'KwArgs? "%s"' % session_info.keyword_arguments
-    
     log_levels = {
         'debug': logging.DEBUG,
         'info': logging.INFO,
