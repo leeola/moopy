@@ -77,3 +77,7 @@ def get_paths():
 def get_serialnumber():
     ''''''
     return int(_service_object.query('serialnumber'))
+
+def select(*selectors):
+    ''''''
+    _service_object.select(*selectors)
