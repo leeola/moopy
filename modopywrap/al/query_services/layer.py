@@ -39,6 +39,10 @@ def select_layer_bg():
     ''''''
     select('layer', 'bg')
 
+def select_layer_fg():
+    ''''''
+    select('layer', 'fg')
+
 def select_layer_id(layer_id):
     ''''''
     select('layer.id', layer_id)
