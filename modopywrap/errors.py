@@ -15,7 +15,7 @@ class ChannelsError(ModoPyWrapError):
     '''
     pass
 
-class ImproperMatchType(ModoChannelsError):
+class ImproperMatchType(ChannelsError):
     '''
     '''
     
