@@ -1,6 +1,6 @@
 
 WARNING:
-    ModoPyWrap is still in the early development and experimental stage and us
+    ModoPyWrap is still in the early development and experimental stage and is
     not recommended for use.
 
 INSTALLATION:
@@ -12,7 +12,8 @@ INSTALLATION:
 
 EXAMPLES:
     All the files in the ./examples folder are ment to be run directly by modo.
-    These are designed to show you examples of how to use ModoPyWrap.
+    These are designed to show you examples of how to use ModoPyWrap. Run it,
+    see what it does, and examine the code.
 
 DOCUMENTATION:
     Documentation will be slightly handled by the examples. There will be API
