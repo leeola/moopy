@@ -5,12 +5,12 @@
 # Local
 
 
-class ModoPyWrapError(Exception):
-    '''The base Modo Wrapper error.
+class MoopyError(Exception):
+    '''The base Moopy error.
     '''
     pass
 
-class ChannelsError(ModoPyWrapError):
+class ChannelsError(MoopyError):
     '''The base channels error.
     '''
     pass
@@ -33,7 +33,7 @@ class ImproperMatchType(ChannelsError):
         if self.message is not None:
             return '\n%s\nChannel #1: %s\nChannel #2: %s' % self.message
 
-class InvalidArgumentSupplied(ModoPyWrapError):
+class InvalidArgumentSupplied(MoopyError):
     '''The arguments from modo given to a user script are formatted incorrectly.
     '''
 
@@ -48,7 +48,7 @@ class InvalidArgumentSupplied(ModoPyWrapError):
         '''
         return '\n%s' % self.message
 
-class ModoLibrariesNotFound(ModoPyWrapError):
+class ModoLibrariesNotFound(MoopyError):
     '''The libraries provided by an instance of modo were not found.
     '''
     pass

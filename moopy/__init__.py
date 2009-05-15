@@ -8,7 +8,7 @@ import errors
 
 
 def check_modo():
-    '''Run through a series of tests to make sure ModoPyWrap is able to
+    '''Run through a series of tests to make sure Moopy is able to
     interact properly with modo.
     '''
     

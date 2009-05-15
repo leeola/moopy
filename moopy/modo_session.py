@@ -12,15 +12,15 @@ import errors
 #: An instance of L{SessionInfo} created by L{initialize}
 session_info = None
 
-def initialize(mpw_loglvl=logging.WARNING, mpw_logfile=None,
+def initialize(moopy_loglvl=logging.WARNING, moopy_logfile=None,
                loglvl=logging.WARNING, logfile=None):
-    '''Initializing ModoPyWrap will set a few things up for the lib, such as
+    '''Initializing Moopy will set a few things up for the lib, such as
     rerouting stdout into modo and creating a L{SessionInfo} object.
     
-    @param mpw_loglvl: Set the loglevel for mpw, internally.
+    @param moopy_loglvl: Set the loglevel for moopy, internally.
     Note that it will be overriden by the client value, if given.
     
-    @param mpw_logfile: Set the logfile for mpw, internally.
+    @param moopy_logfile: Set the logfile for moopy, internally.
     Note that it will be overriden by the client value, if given.
     
     @param loglvl: Set the loglvl for client scripts.
@@ -46,13 +46,13 @@ def initialize(mpw_loglvl=logging.WARNING, mpw_logfile=None,
     }
     
     if session_info.keyword_arguments is not None:
-        # Now we set the mpw log level. If the user defined one, use his.
-        if session_info.keyword_arguments.has_key('mpw_loglvl'):
-            mpw_loglvl = log_levels[
-                session_info.keyword_arguments['mpw_loglvl'].lower()]
+        # Now we set the moopy log level. If the user defined one, use his.
+        if session_info.keyword_arguments.has_key('moopy_loglvl'):
+            moopy_loglvl = log_levels[
+                session_info.keyword_arguments['moopy_loglvl'].lower()]
         # If the user defined a file to log to, grab that value.
-        if session_info.keyword_arguments.has_key('mpw_logfile'):
-            mpw_logfile = session_info.keyword_arguments['mpw_logfile']
+        if session_info.keyword_arguments.has_key('moopy_logfile'):
+            moopy_logfile = session_info.keyword_arguments['moopy_logfile']
         
         # The same as above, except for the root logger, aka, the script logger.
         if session_info.keyword_arguments.has_key('loglvl'):
@@ -61,32 +61,32 @@ def initialize(mpw_loglvl=logging.WARNING, mpw_logfile=None,
         if session_info.keyword_arguments.has_key('logfile'):
             logfile = session_info.keyword_arguments['logfile']
     
-    # Create/get both the mpw and script loggers
+    # Create/get both the moopy and script loggers
     script_logger = logging.getLogger()
-    mpw_logger = logging.getLogger('ModoPyWrap')
+    moopy_logger = logging.getLogger('Moopy')
     
     # Create handlers for both loggers
     script_handler = logging.StreamHandler(sys.stdout)
-    mpw_handler = logging.StreamHandler(sys.stdout)
+    moopy_handler = logging.StreamHandler(sys.stdout)
     
-    # Create formatter, its important that it starts with "MPW Script Log", or
-    # "MPW Log" so that it is formatted properly when printed to modo.
+    # Create formatter, its important that it starts with "Moopy Script Log", or
+    # "Moopy Log" so that it is formatted properly when printed to modo.
     script_formatter = logging.Formatter(
-        'MPW Script Log: %(levelname)s - %(message)s')
-    mpw_formatter = logging.Formatter(
-        'MPW Log: %(levelname)s - %(message)s')
+        'Moopy Script Log: %(levelname)s - %(message)s')
+    moopy_formatter = logging.Formatter(
+        'Moopy Log: %(levelname)s - %(message)s')
     
     # Add the formatters to the handlers.
     script_handler.setFormatter(script_formatter)
-    mpw_handler.setFormatter(mpw_formatter)
+    moopy_handler.setFormatter(moopy_formatter)
     
     # Add the handlers
     script_logger.addHandler(script_handler)
-    mpw_logger.addHandler(mpw_handler)
+    moopy_logger.addHandler(moopy_handler)
     
     # Set the log levels.
     script_logger.setLevel(loglvl)
-    mpw_logger.setLevel(mpw_loglvl)
+    moopy_logger.setLevel(moopy_loglvl)
     
     # Finally, repeat the log steps above if the user defined any file loggers.
     if logfile is not None:
@@ -94,21 +94,21 @@ def initialize(mpw_loglvl=logging.WARNING, mpw_logfile=None,
         # exceptions.
         script_file_handler = logging.FileHandler(logfile)
         script_file_formatter = logging.Formatter(
-            'MPW Script Log: [%(asctime)s] %(levelname)s - %(message)s')
+            'Moopy Script Log: [%(asctime)s] %(levelname)s - %(message)s')
         
         script_file_handler.setFormatter(script_file_formatter)
         script_logger.addHandler(script_file_handler)
         
-    if mpw_logfile is not None:
+    if moopy_logfile is not None:
         # Same as above.
-        mpw_file_handler = logging.FileHandler(mpw_logfile)
-        mpw_file_formatter = logging.Formatter(
-            'MPW Log: [%(asctime)s] %(levelname)s - %(message)s')
+        moopy_file_handler = logging.FileHandler(moopy_logfile)
+        moopy_file_formatter = logging.Formatter(
+            'Moopy Log: [%(asctime)s] %(levelname)s - %(message)s')
         
-        mpw_file_handler.setFormatter(mpw_file_formatter)
-        mpw_logger.addHandler(mpw_file_handler)
+        moopy_file_handler.setFormatter(moopy_file_formatter)
+        moopy_logger.addHandler(moopy_file_handler)
     
-    mpw_logger.debug('Session initialization complete.')
+    moopy_logger.debug('Session initialization complete.')
         
 
 class SessionInfo(object):
@@ -194,8 +194,8 @@ class ModoPrinter(object):
         '''
         '''
         if content_to_write and content_to_write != '\n':
-            if (content_to_write.startswith('MPW Log') or
-                content_to_write.startswith('MPW Script Log')):
+            if (content_to_write.startswith('Moopy Log') or
+                content_to_write.startswith('Moopy Script Log')):
                 lx.out(content_to_write)
             else:
-                lx.out('MPW Print: %s' % content_to_write)
+                lx.out('Moopy Print: %s' % content_to_write)
