@@ -1,18 +1,18 @@
 
 WARNING:
-    ModoPyWrap is still in the early development and experimental stage and is
+    Moopy is still in the early development and experimental stage and is
     not recommended for use.
 
 INSTALLATION:
-    Installing MPW is pretty simple. Simply download ModoPyWrap, unzip it, and
-    put the modopywrap folder into the following OS specific directories:
+    Installing Moopy is pretty simple. Simply download Moopy, unzip it, and
+    put the moopy folder into the following OS specific directories:
     
     - OSX: ~/Library/Application\ Support/Luxology/Scripts
     - Windows: C:\Documents and Settings\YourUserName\Application Data\Luxology\Scripts
 
 EXAMPLES:
     All the files in the ./examples folder are ment to be run directly by modo.
-    These are designed to show you examples of how to use ModoPyWrap. Run it,
+    These are designed to show you examples of how to use Moopy. Run it,
     see what it does, and examine the code.
 
 DOCUMENTATION:
