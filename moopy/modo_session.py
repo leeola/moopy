@@ -13,7 +13,7 @@ import errors
 session_info = None
 
 def initialize(moopy_loglvl=logging.WARNING, moopy_logfile=None,
-               loglvl=logging.WARNING, logfile=None):
+               loglvl=logging.WARNING, logfile=None, stdout_modo=True):
     '''Initializing Moopy will set a few things up for the lib, such as
     rerouting stdout into modo and creating a L{SessionInfo} object.
     
@@ -29,9 +29,9 @@ def initialize(moopy_loglvl=logging.WARNING, moopy_logfile=None,
     @param logfile: Set the logfile for client scripts.
     Note that it will be overriden by the client value, if given.
     '''
-    
-    # Reroute stdout to modo printing.
-    sys.stdout = ModoPrinter()
+    if stdout_modo:
+        # Reroute stdout to modo printing.
+        sys.stdout = ModoPrinter()
     
     # Create a session info instance, and assign it to the module level object.
     global session_info
