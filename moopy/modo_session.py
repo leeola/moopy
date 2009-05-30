@@ -1,6 +1,7 @@
 ''''''
 
 # Standard
+import copy
 import logging
 import shlex
 import sys
@@ -109,7 +110,238 @@ def initialize(moopy_loglvl=logging.WARNING, moopy_logfile=None,
         moopy_logger.addHandler(moopy_file_handler)
     
     moopy_logger.debug('Session initialization complete.')
+
+class ModoPrinter(object):
+    '''The purpose of this class is to be given to sys.stdout so that standard
+    prints will be given to modo's event logger.
+    '''
+    
+    def write(self, content_to_write):
+        '''
+        '''
+        if content_to_write and content_to_write != '\n':
+            if (content_to_write.startswith('Moopy Log') or
+                content_to_write.startswith('Moopy Script Log')):
+                lx.out(content_to_write)
+            else:
+                lx.out('Moopy Print: %s' % content_to_write)
+
+class ScriptArguments(object):
+    '''The ScriptArguments class allows modo scripts to require arguments,
+    keyword arguments, and even set the required type for them.'''
+    
+    def __init__(self):
+        ''''''
         
+        self.arguments = []
+        self.values = []
+    
+    def __getitem__(self, index):
+        ''''''
+        
+        return self.values[index]
+    
+    def add(self, default=None, required=False, allowed_types=None,
+            keyword_only=False, keywords=None, options=None):
+        ''''''
+        
+        # Calculate this arguments non-keyword index (if any)
+        # This is done by iterating backwards over the list of arguments until
+        # one is found to have an argument index. That index plus one is used
+        # for this arguments index.
+        if not keyword_only:
+            
+            # This is just a hack. When 401 hits, this can be removed in favor
+            # of the builtin reversed()
+            rev_arguments = copy.copy(self.arguments)
+            rev_arguments.reverse()
+            logging.getLogger('moopy').warning(
+                'Moopy is using a function from python 2.3. Remove '
+                'list.reverse() in favor of reversed()')
+        
+            for argument in rev_arguments:
+                if argument['index'] is not None:
+                    argument_index = argument['index'] + 1
+                    break
+            else:
+                # If we get here, then the loop ran through without finding
+                # Any other arguments with indexes. This means that this is
+                # the first non-keyword argument, so assign it an index of 0.
+                argument_index = 0
+        else:
+            argument_index = None
+        
+        argument_makeup = {
+            'index':argument_index,
+            'default':default,
+            'allowed_types':allowed_types,
+            'keyword_only':keyword_only,
+            'keywords':keywords,
+            'required':required,
+            'options':options,
+        }
+        
+        logging.getLogger('moopy').debug('Appending a script argument with the '
+                                         'values "%s"' % argument_makeup)
+        
+        self.arguments.append(argument_makeup)
+    
+    def validate(self):
+        ''''''
+        
+        map(self.validate_argument, self.arguments)
+    
+    def validate_argument(self, argument):
+        ''''''
+        
+        # Store some argument parameters locally, to reduce dict lookups.
+        keywords = argument['keywords']
+        allowed_types = argument['allowed_types']
+        argument_value = None
+        
+        # First we attempt to find this arguments value.
+        if keywords is not None:
+            # The scripter has provided kw-arguments for the user.
+            if session_info.keyword_arguments is not None:
+                # The user provided kwargs
+                for keyword in keywords:
+                    if session_info.keyword_arguments.has_key(keyword):
+                        if argument_value is not None:
+                            # If the argument_value has already been assigned,
+                            # we raise a failure signalling that the user used
+                            # duplicate keywords.
+                            raise errors.DuplicateArgumentSupplied(
+                                'The argument which contains (but not limited '
+                                'to) the key "%s" was used atleast twice with '
+                                'the following values:\n  #1: "%s"\n  #2: '
+                                '"%s"' % (
+                                    keyword, argument_value,
+                                    session_info.keyword_arguments[keyword]))
+                        argument_value = session_info.keyword_arguments[keyword]
+        else:
+            if argument['keyword_only']:
+                # If the argument is keyword only, but has no keywords given,
+                # raise an error. Note that this is strictly a scripting error
+                # by the programmer/scripter.
+                raise InvalidArgumentFormatting(
+                    ''
+                )
+        
+        if not argument['keyword_only']:
+            if (session_info.arguments is not None and 
+                argument['index'] < len(session_info.arguments)):
+                # If the index of this function is smaller than the total
+                # functions we know that this argument's value is in
+                # the non-keyword arguments.
+                if argument_value is not None:
+                    # If the argument_value has already been assigned,
+                    # we raise a failure signalling that the user used
+                    # duplicate keywords.
+                    raise errors.DuplicateArgumentSupplied(
+                        'The key "%s" was used in conjunction with its'
+                        'non-keyword argument, these contained the values' % (
+                            keyword, argument_value,
+                            session_info.keyword_arguments[keyword]))
+                argument_value = session_info.arguments[argument['index']]
+        
+        def ordinal_suffix(integer):
+            # This is just a little tool function for the following exception
+            # messages.. i should probably put this somewhere useful..
+            ''''''
+            def return_th():
+                return 'th'
+            def return_st():
+                return 'st'
+            def return_nd():
+                return 'nd'
+            def return_rd():
+                return 'rd'
+            
+            ordinal_dict = {
+                11:return_th,
+                12:return_th,
+                13:return_th,
+                1:return_st,
+                2:return_nd,
+                3:return_rd,
+            }
+            
+            large_mod = integer % 100
+            if ordinal_dict.has_key(large_mod):
+                return ordinal_dict[large_mod]()
+            
+            small_mod = integer % 10
+            if ordinal_dict.has_key(small_mod):
+                return ordinal_dict[small_mod]()
+            
+            return 'th'
+        
+        if argument_value is None and argument['required']:
+            # If the argument was not given by the user, but it is required,
+            # fail it.
+            if keywords is not None and not argument['keyword_only']:
+                raise errors.RequiredArgumentMissing(
+                    'An argument was not supplied with a value it required. '
+                    'This can be the %s%s non-keyword argument, or the '
+                    'following keyword-arguments: %s' % (
+                        argument['index']+1,
+                        ordinal_suffix(argument['index']+1), keywords,)
+                )
+            elif keywords is not None and argument['keyword_only']:
+                raise errors.RequiredArgumentMissing(
+                    'An argument was not supplied with a value it required. '
+                    'The argument must be one of the following keyword-'
+                    'arguments: %s' % keywords
+                )
+            elif keywords is None:
+                raise errors.RequiredArgumentMissing(
+                    'An argument was not supplied with a value it required. '
+                    'The argument must be the %s non-keyword '
+                    'argument.' % ordinal_suffix(argument['index'])
+                )
+        
+        if argument_value is not None:
+            if (argument['options'] is not None and
+                argument_value not in argument['options']):
+                if argument['keyword_only']:
+                    raise errors.ArgumentIsNotAnOption(
+                        'The argument which has the keywords "%s" has a '
+                        'value that is not in the list of accepted options. '
+                        'Options: %s' % (
+                            keywords, argument['options'])
+                    )
+                else:
+                    raise errors.ArgumentIsNotAnOption(
+                        'The %s%s argument (or keyword-args: %s) is not in '
+                        'the list of accepted options. Options: %s' % (
+                            argument['index']+1,
+                            ordinal_suffix(argument['index']+1),
+                            argument['options'])
+                    )
+            
+            if (argument['allowed_types'] is not None 
+                and type(argument_value) not in argument['allowed_types']):
+                
+                if argument['keyword_only']:
+                    raise errors.InvalidArgumentType(
+                        'The argument which has the keywords "%s" was '
+                        'expected to be of type(s) "%s"' % (
+                            keywords,
+                            argument['allowed_types'])
+                    )
+                else:
+                    raise errors.InvalidArgumentType(
+                        'The %s%s argument (or keyword-args: %s) was '
+                        'expected to be of type(s) "%s"' % (
+                            argument['index']+1,
+                            ordinal_suffix(argument['index']+1), keywords,
+                            argument['allowed_types'])
+                    )
+        
+        # Now that we're all done, and a value has been supplied, store that
+        # value in this class, so it can be accessed directly from this class
+        # (if desired)
+        self.values.append(argument_value)
 
 class SessionInfo(object):
     '''This class stores information about the "modo session". On initialization
@@ -163,9 +395,9 @@ class SessionInfo(object):
                 if keyword_arguments.has_key(key):
                     # If the key is already defined, raise an exception
                     # instead of simply overriding it.
-                    raise errors.InvalidArgumentSupplied(
-                        'The key "%s" was used twice with the following '
-                        'values:\n  #1: "%s"\n  #2: "%s"' % (
+                    raise errors.DuplicateArgumentSupplied(
+                        'The key "%s" was used atleast twice with the '
+                        'following values:\n  #1: "%s"\n  #2: "%s"' % (
                             key, keyword_arguments[key], value))
                 
                 # Now we add this keyword arg to the keyword_arguments object.
@@ -184,18 +416,3 @@ class SessionInfo(object):
         
         self.arguments = arguments
         self.keyword_arguments = keyword_arguments
-
-class ModoPrinter(object):
-    '''The purpose of this class is to be given to sys.stdout so that standard
-    prints will be given to modo's event logger.
-    '''
-    
-    def write(self, content_to_write):
-        '''
-        '''
-        if content_to_write and content_to_write != '\n':
-            if (content_to_write.startswith('Moopy Log') or
-                content_to_write.startswith('Moopy Script Log')):
-                lx.out(content_to_write)
-            else:
-                lx.out('Moopy Print: %s' % content_to_write)
