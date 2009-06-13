@@ -184,10 +184,26 @@ class ScriptArguments(object):
         logging.getLogger('moopy').debug('Appending a script argument with the '
                                          'values "%s"' % argument_makeup)
         
+        # Append the script keywords to the valid keywords list, so we can
+        # check it against what the user supplied later on.
+        self.valid_keywords += keywords
+        # Same as above, except for non-kw arguments.
+        if not keyword_only:
+            self.total_sarguments += 1
+        
         self.arguments.append(argument_makeup)
     
     def validate(self):
         ''''''
+        if len(session_info.arguments) > self.total_arguments:
+            # Calculate the total extra arguments
+            total_extra_arguments =  (
+                len(session_info.arguments) - self.total_arguments)
+            
+            raise errors.TooManyArguments(
+                'There are too many non-keyword arguments given. Offending '
+                'arguments: %s' % session_info.arguments[total_extra_arguments:]
+            )
         
         map(self.validate_argument, self.arguments)
     
