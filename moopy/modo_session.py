@@ -133,7 +133,17 @@ class ScriptArguments(object):
     def __init__(self):
         ''''''
         
+        # The arguments held in ScriptArguments instance, stored in dict form.
         self.arguments = []
+        # A set of all the keywords provided to this instance.
+        self.all_keywords = set()
+        # The total positional arguments held within this class.
+        self.total_positionals = 0
+        # The total unique arguments this script contains.
+        # An example of unique is "f" and "file", 2 arguments, but one unique
+        # since they both result in the same value.
+        self.total_unique_arguments = 0
+        
         self.values = []
     
     def __getitem__(self, index):
@@ -141,41 +151,57 @@ class ScriptArguments(object):
         
         return self.values[index]
     
-    def add(self, default=None, required=False, allowed_types=None,
-            keyword_only=False, keywords=None, options=None):
-        ''''''
+    def add_argument(self, default=None, required=False, allowed_types=None,
+                     positional=True, keywords=None, options=None):
+        '''Add an argument to this ScriptArguments instance.
         
-        # Calculate this arguments non-keyword index (if any)
+        @param default: The default value this argument will use.
+        
+        @param required: If True this function will raise an exception if not
+        provided with a value in one of the supplied methods.
+        
+        @param allowed_types: A list of object types. If provided, the argument
+        given must match atleast ONE of the types provided.
+        
+        @param positional: If true, this argument can accept a positional
+        argument as its value. If false, only keyword arguments (matching
+        one of the supplied keywords) are accepted.
+        
+        @param keywords: A list of strings that this argument can use.
+        
+        @options: If given, the value of this argument must exactly match one
+        of the given options.
+        
+        @raise errors.DuplicateArgumentSupplied: Raised if a duplicate argument
+        is given to {self.add_arguments}.
+        '''
+        
+        # If there is an intersection of all_keywords and the newly supplied
+        # keywords, raise an exception.
+        if self.all_keywords.intersection(keywords):
+            raise errors.DuplicateArgumentSupplied(
+                'Argument: %s' % self.all_keywords.intersection(keywords)
+            )
+        
+        # Calculate this arguments positional index (if any)
         # This is done by iterating backwards over the list of arguments until
         # one is found to have an argument index. That index plus one is used
         # for this arguments index.
-        if not keyword_only:
+        if positional:
+            # Store the index of this positional argument
+            argument_index = self.positional_count
             
-            # This is just a hack. When 401 hits, this can be removed in favor
-            # of the builtin reversed()
-            rev_arguments = copy.copy(self.arguments)
-            rev_arguments.reverse()
-            logging.getLogger('moopy').warning(
-                'Moopy is using a function from python 2.3. Remove '
-                'list.reverse() in favor of reversed()')
-        
-            for argument in rev_arguments:
-                if argument['index'] is not None:
-                    argument_index = argument['index'] + 1
-                    break
-            else:
-                # If we get here, then the loop ran through without finding
-                # Any other arguments with indexes. This means that this is
-                # the first non-keyword argument, so assign it an index of 0.
-                argument_index = 0
+            # Increase the count of positional arguments.
+            self.positional_count += 1
         else:
+            # This option is not storing a positional argument.
             argument_index = None
         
         argument_makeup = {
             'index':argument_index,
             'default':default,
             'allowed_types':allowed_types,
-            'keyword_only':keyword_only,
+            'positional':positional,
             'keywords':keywords,
             'required':required,
             'options':options,
@@ -184,17 +210,20 @@ class ScriptArguments(object):
         logging.getLogger('moopy').debug('Appending a script argument with the '
                                          'values "%s"' % argument_makeup)
         
-        # Append the script keywords to the valid keywords list, so we can
+        # Append the script keywords to the keywords list, so we can
         # check it against what the user supplied later on.
-        self.valid_keywords += keywords
-        # Same as above, except for non-kw arguments.
-        if not keyword_only:
-            self.total_sarguments += 1
+        self.all_keywords.update(keywords)
         
+        # Add the argument dict to the self.arguments list.
         self.arguments.append(argument_makeup)
+        
+        # Update the total arguments count.
+        self.total_unique_arguments += 1
     
-    def validate(self):
-        ''''''
+    def parse(self):
+        '''
+        '''
+        
         if len(session_info.arguments) > self.total_arguments:
             # Calculate the total extra arguments
             total_extra_arguments =  (
