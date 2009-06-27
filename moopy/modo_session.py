@@ -126,33 +126,49 @@ class ModoPrinter(object):
             else:
                 lx.out('Moopy Print: %s' % content_to_write)
 
-class ScriptArguments(object):
-    '''The ScriptArguments class allows modo scripts to require arguments,
-    keyword arguments, and even set the required type for them.'''
+class ScriptOptions(object):
+    '''The ScriptOptions class allows modo scripts to require positional
+    arguments, keyword arguments, and even set the required type for them.'''
     
-    def __init__(self):
+    def __init__(self, argument_string=None):
         ''''''
         
-        # The arguments held in ScriptArguments instance, stored in dict form.
-        self.arguments = []
-        # A set of all the keywords provided to this instance.
-        self.all_keywords = set()
+        # The arguments this ScriptOptions instance contains.
+        # Remember that these can be supplied to the class directly, or by modo
+        self.parsed_arguments = {}
+        # The options held in ScriptArguments instance, stored in dict form.
+        self.options = None
+        # A set of all the keywords provided to this ScriptOptions instance.
+        self.all_option_keywords = None
         # The total positional arguments held within this class.
-        self.total_positionals = 0
+        self.total_positional_options = 0
         # The total unique arguments this script contains.
         # An example of unique is "f" and "file", 2 arguments, but one unique
         # since they both result in the same value.
-        self.total_unique_arguments = 0
+        self.total_unique_options = 0
         
-        self.values = []
+        if argument_string is not None:
+            # If the class was given a manual argument string.
+            
+            self.argument_string = argument_string
+        else:
+            # Since the argument_string is not supplied, ask modo for the real
+            # string.
+            
+            self.argument_string = lx.arg()
+        
+        if not self.argument_string:
+            # If the argument string is empty, replace the value with None
+                
+            self.argument_string = None
     
-    def __getitem__(self, index):
+    def __getitem__(self, key):
         ''''''
         
-        return self.values[index]
+        return self.arguments[key]
     
     def add_argument(self, default=None, required=False, allowed_types=None,
-                     positional=True, keywords=None, options=None):
+                     positional=True, keywords=None, choices=None):
         '''Add an argument to this ScriptArguments instance.
         
         @param default: The default value this argument will use.
@@ -220,23 +236,87 @@ class ScriptArguments(object):
         # Update the total arguments count.
         self.total_unique_arguments += 1
     
+    def convert_string(string_to_convert):
+        '''This is a utility function used to convert string arguments into
+        the Python object equivalent.
+        '''
+        try:
+            if '.' in string_to_convert:
+                return float(string_to_convert)
+            else:
+                return int(string_to_convert)
+        except ValueError:
+            if string_to_convert.lower() == 'true':
+                return True
+            if string_to_convert.lower() == 'false':
+                return False
+            else:
+                return string_to_convert
+    
     def parse(self):
         '''
         '''
         
-        if len(session_info.arguments) > self.total_arguments:
-            # Calculate the total extra arguments
-            total_extra_arguments =  (
-                len(session_info.arguments) - self.total_arguments)
+        if self.argument_string is None:
+            # If there is no argument string, there's nothing to parse.
             
-            raise errors.TooManyArguments(
-                'There are too many non-keyword arguments given. Offending '
-                'arguments: %s' % session_info.arguments[total_extra_arguments:]
-            )
+            return (None, None,)
         
-        map(self.validate_argument, self.arguments)
+        # First we parse the arguments with shlex.
+        split_arguments = shlex.split(self.argument_string)
+        
+        # Now take the parsed args, and loop through each item and split them
+        # into two lists. self.arguments and self.keyword_arguments.
+        # We also convert every arg, key, and value into the proper python
+        # object.
+        positional_arguments = []
+        keyword_arguments = {}
+        
+        # Store the convert function locally for speed.
+        convert_string = self.convert_string
+        
+        for split_argument in split_arguments:
+            if '=' in raw_argument:
+                # If there is a = character, its a kw_arg
+                
+                split_kw_argument = split_argument.split('=', 1)
+                
+                # Both the key and the value, we use
+                # convert_argument_value() to make sure the objects are
+                # their intended type.
+                key = convert_string(split_kw_argument[0])
+                value = convert_string(split_kw_argument[1])
+                
+                if keyword_arguments.has_key(key):
+                    # If the key is already defined, raise an exception
+                    # instead of simply overriding it.
+                    raise errors.DuplicateArgumentSupplied(
+                        'The key "%s" was used atleast twice with the '
+                        'following values:\n  #1: "%s"\n  #2: "%s"' % (
+                            key, keyword_arguments[key], value))
+                
+                # Now we add this keyword arg to the keyword_arguments object.
+                keyword_arguments[key] = value
+            else:
+                # If there is no = character, its a positional argument.
+                
+                positional_arguments.append(convert_string(split_argument))
+        
+        if not positional_arguments:
+            # For clean python, if arguments is empty make it None
+            
+            positional_arguments = None
+        if not keyword_arguments:
+            # Same as above.
+            
+            keyword_arguments = None
+        
+        self.positional_arguments = arguments
+        self.keyword_arguments = keyword_arguments
+        
+        map(self.parse_argument, self.arguments)
     
-    def validate_argument(self, argument):
+    def parse_argument(self, argument):
         ''''''
         
         # Store some argument parameters locally, to reduce dict lookups.
@@ -247,8 +327,10 @@ class ScriptArguments(object):
         # First we attempt to find this arguments value.
         if keywords is not None:
             # The scripter has provided kw-arguments for the user.
+            
             if session_info.keyword_arguments is not None:
                 # The user provided kwargs
+                
                 for keyword in keywords:
                     if session_info.keyword_arguments.has_key(keyword):
                         if argument_value is not None:
@@ -398,66 +480,4 @@ class SessionInfo(object):
         '''
         '''
         
-        # First we parse the arguments with shlex.
-        raw_arguments = shlex.split(lx.arg())
-        
-        # Now take the parsed args, and loop through each item and split them
-        # into two lists. self.arguments and self.keyword_arguments.
-        # We also convert every arg, key, and value into the proper python
-        # object.
-        arguments = []
-        keyword_arguments = {}
-        def convert_string(string_to_convert):
-            '''We use this function to quickly convert a string into an int,
-            float, or bool. If it is found to not be a bool, int, or float,
-            the string is returned unedited.
-            '''
-            try:
-                if '.' in string_to_convert:
-                    return float(string_to_convert)
-                else:
-                    return int(string_to_convert)
-            except ValueError:
-                if string_to_convert.lower() == 'true':
-                    return True
-                if string_to_convert.lower() == 'false':
-                    return False
-                else:
-                    return string_to_convert
-                
-        for raw_argument in raw_arguments:
-            if '=' in raw_argument:
-                # If there is a = character, its a kw_arg
-                
-                split_raw_argument = raw_argument.split('=', 1)
-                
-                # Both the key and the value, we use
-                # convert_string() to make sure the objects are their intended
-                # type.
-                key = convert_string(split_raw_argument[0])
-                value = convert_string(split_raw_argument[1])
-                
-                if keyword_arguments.has_key(key):
-                    # If the key is already defined, raise an exception
-                    # instead of simply overriding it.
-                    raise errors.DuplicateArgumentSupplied(
-                        'The key "%s" was used atleast twice with the '
-                        'following values:\n  #1: "%s"\n  #2: "%s"' % (
-                            key, keyword_arguments[key], value))
-                
-                # Now we add this keyword arg to the keyword_arguments object.
-                keyword_arguments[key] = value
-            else:
-                arguments.append(convert_string(raw_argument))
-        
-        if not arguments:
-            # For clean python, if arguments is empty make it None
-            
-            arguments = None
-        if not keyword_arguments:
-            # Same as above.
-            
-            keyword_arguments = None
-        
-        self.arguments = arguments
-        self.keyword_arguments = keyword_arguments
+        pass
