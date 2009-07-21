@@ -38,8 +38,8 @@ class ModoLibrariesNotFound(MoopyError):
     '''
     pass
 
-class ScriptArgumentsError(MoopyError):
-    '''The base script arguments error.'''
+class ScriptOptionsError(MoopyError):
+    '''The base script options error.'''
 
     def __init__(self, message):
         '''
@@ -52,28 +52,29 @@ class ScriptArgumentsError(MoopyError):
         '''
         return '\n%s' % self.message
 
-class ArgumentIsNotAnOption(ScriptArgumentsError):
+class ArgumentIsNotAChoice(ScriptOptionsError):
     '''An argument supplied was found within the list of accepted arguments.
     '''
     pass
 
-class DuplicateArgumentSupplied(ScriptArgumentsError):
+class DuplicateArgumentSupplied(ScriptOptionsError):
     '''A keyword argument was given twice. This is thrown to prevent unintended
     behavior.
     '''
     pass
 
-class InvalidArgumentFormatting(ScriptArgumentsError):
+class InvalidArgumentFormatting(ScriptOptionsError):
     '''The arguments from modo given to a user script are formatted incorrectly.
     '''
     pass
 
-class InvalidArgumentType(ScriptArgumentsError):
+class InvalidArgumentType(ScriptOptionsError):
     '''An argument supplied is not an accepted type for that argument.
     '''
     pass
 
-class RequiredArgumentMissing(ScriptArgumentsError):
+class RequiredArgumentMissing(ScriptOptionsError):
     '''A required argument was not supplied in any form by the user.
     '''
     pass
+
