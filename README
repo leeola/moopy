@@ -4,12 +4,12 @@ WARNING:
     not recommended for use.
 
 INSTALLATION:
-    Installing Moopy is pretty simple. Simply download Moopy, unzip it, and
-    put the moopy folder into the following OS specific directories:
+    Installing Moopy is pretty simple. Simply download Moopy, and unzip it
+    into the following OS specific directories:
     
     - OSX: ~/Library/Application\ Support/Luxology/Scripts
     - Windows: C:\Documents and Settings\YourUserName\Application Data\Luxology\Scripts
-
+    
 EXAMPLES:
     All the files in the ./examples folder are ment to be run directly by modo.
     These are designed to show you examples of how to use Moopy. Run it,
