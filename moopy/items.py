@@ -22,7 +22,7 @@ def instance_item(item):
     raise exceptions.NotImplementedError()
 
 class Item(object):
-    '''The base layer item. Not indended for direct use, but feel free to
+    '''The base item. Not indended for direct use, but feel free to
     inherit it.
     '''
 
@@ -34,8 +34,26 @@ class Item(object):
         # Add default values for all the properties, incase one of you
         # crazy kids decides to inherit from Item.
         self._channels = None
-        self._layer_id = None
         self._name = None
+
+    def __str__(self):
+        '''
+        '''
+        return str(self.name)
+
+class SceneItem(Item):
+    '''The base scene item. Not indended for direct use, but feel free to
+    inherit it.
+    '''
+
+    def __init__(self, *args, **kwargs):
+        '''
+        '''
+        super(SceneItem, self).__init__(*args, **kwargs)
+
+        # Add default values for all the properties, incase one of you
+        # crazy kids decides to inherit from Item.
+        self._layer_id = None
         self._visibility = None
 
     def __str__(self):
@@ -134,7 +152,7 @@ class Item(object):
         '''
         raise exceptions.NotImplementedError()
 
-class Mesh(Item):
+class MeshItem(SceneItem):
     '''
     '''
 
