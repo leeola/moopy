@@ -65,6 +65,8 @@ def initialize(moopy_loglvl=logging.WARNING, moopy_logfile=None,
         'critical': logging.CRITICAL
     }
 
+    # This has been disabled for now due to arguments being removed from
+    # session_info. A workaround is expected in the future.
     #if session_info.keyword_arguments is not None:
         ## Now we set the moopy log level. If the user defined one, use his.
         #if session_info.keyword_arguments.has_key('moopy_loglvl'):
