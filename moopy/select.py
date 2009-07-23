@@ -25,3 +25,4 @@ class Selection(object):
     def make_active(self):
         '''Make this selection instance the current selection in modo.'''
         raise exceptions.NotImplementedError()
+

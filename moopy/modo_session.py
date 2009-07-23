@@ -48,7 +48,7 @@ def initialize(moopy_loglvl=logging.WARNING, moopy_logfile=None,
     @param logfile: Set the logfile for client scripts.
     Note that it will be overriden by the client value, if given.
     '''
-
+    
     if stdout_modo:
         # Reroute stdout to modo printing.
         sys.stdout = ModoPrinter()
