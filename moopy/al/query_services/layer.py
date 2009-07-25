@@ -15,6 +15,10 @@ def list_roots():
     '''Return a tuple of all the roots found in layerservice.'''
     return _service_object.query()
 
+def get_all_vert_indices():
+    ''''''
+    return _service_object.query('verts ? all')
+
 def get_layer_groups():
     ''''''
     return _service_object.query('layer_groups')
@@ -26,6 +30,18 @@ def get_layer_id():
 def get_layer_name():
     ''''''
     return _service_object.query('layer.name')
+
+def get_selected_vert_indices():
+    ''''''
+    return _service_object.query('verts ? selected')
+
+def get_unselected_vert_indices():
+    ''''''
+    return _service_object.query('verts ? unselected')
+
+def get_visible_vert_indices():
+    ''''''
+    return _service_object.query('verts ? visible')
 
 def select(*selectors):
     ''''''
