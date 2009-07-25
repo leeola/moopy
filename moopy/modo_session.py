@@ -65,27 +65,9 @@ def initialize(moopy_loglvl=logging.WARNING, moopy_logfile=None,
         'critical': logging.CRITICAL
     }
 
-    # This has been disabled for now due to arguments being removed from
-    # session_info. A workaround is expected in the future.
-    #if session_info.keyword_arguments is not None:
-        ## Now we set the moopy log level. If the user defined one, use his.
-        #if session_info.keyword_arguments.has_key('moopy_loglvl'):
-            #moopy_loglvl = log_levels[
-                #session_info.keyword_arguments['moopy_loglvl'].lower()]
-        ## If the user defined a file to log to, grab that value.
-        #if session_info.keyword_arguments.has_key('moopy_logfile'):
-            #moopy_logfile = session_info.keyword_arguments['moopy_logfile']
-
-        ## The same as above, except for the root logger, aka, the script logger.
-        #if session_info.keyword_arguments.has_key('loglvl'):
-            #loglvl = log_levels[
-                #session_info.keyword_arguments['loglvl'].lower()]
-        #if session_info.keyword_arguments.has_key('logfile'):
-            #logfile = session_info.keyword_arguments['logfile']
-
     # Create/get both the moopy and script loggers
-    script_logger = logging.getLogger()
-    moopy_logger = logging.getLogger('Moopy')
+    script_logger = logging.getLogger('script')
+    moopy_logger = logging.getLogger('moopy')
 
     # Create handlers for both loggers
     script_handler = logging.StreamHandler(sys.stdout)
@@ -105,7 +87,7 @@ def initialize(moopy_loglvl=logging.WARNING, moopy_logfile=None,
     # Add the handlers
     script_logger.addHandler(script_handler)
     moopy_logger.addHandler(moopy_handler)
-
+    
     # Set the log levels.
     script_logger.setLevel(loglvl)
     moopy_logger.setLevel(moopy_loglvl)
@@ -208,67 +190,6 @@ def parse_script_arguments(script_arguments):
         keyword_arguments = None
 
     return (positional_arguments, keyword_arguments)
-
-def trace_wrapper(trace_this):
-    ''''''
-
-    def get_trace_code(frame, context=1):
-        '''This little bit comes from inspect.getframeinfo()'''
-        if context > 0:
-            start = lineno - 1 - context//2
-            try:
-                lines, lnum = inspect.findsource(frame)
-            except IOError:
-                lines = index = None
-            else:
-                start = max(start, 1)
-                start = max(0, min(start, len(lines) - context))
-                lines = lines[start:start+context]
-                index = lineno - 1 - start
-        else:
-            lines = index = None
-
-    try:
-        trace_this()
-    except:
-        # Grab the current frame.
-        frame_cursor = inspect.currentframe().f_back
-
-        # Store all of the frames gathered.
-        all_frame_info = []
-
-        #inspect.getouterframes(frame_cursor)
-
-        while True:
-            # Continue looping through the frame cursor as it travels back
-            # the stack.
-
-            # Grab all relevant information from the current frame.
-            frame_cursor_info = inspect.getframeinfo(frame_cursor)
-            #frame_cursor_info['filename'] = frame_cursor.f_code.co_filename
-            #frame_cursor_info['lineno'] = frame_cursor.f_lineno
-            #frame_cursor_info['function'] = frame_cursor.f_code.co_name
-            #frame_cursor_info['exception_type'] = frame_cursor.f_exc_type
-            #frame_cursor_info['trace_function'] = frame_cursor.f_trace
-            # Append information from each frame the cursor is on
-            all_frame_info.append(frame_cursor_info)
-
-            # Travel back on the stack.
-            temp_frame_cursor = frame_cursor.f_back
-            if temp_frame_cursor is None:
-                break
-            else:
-                frame_cursor = temp_frame_cursor
-
-        # Reverse the frame order.
-        all_frame_info.reverse()
-
-        for frame_info in all_frame_info:
-            lx.out(frame_info)
-
-        lx.out(sys.exc_type)
-        lx.out(sys.exc_value)
-        #lx.out('Boo: %s' % str(inspect.getframeinfo(frame_cursor)))
 
 class ModoPrinter(object):
     '''The purpose of this class is to be given to sys.stdout so that standard

@@ -15,6 +15,7 @@ moopy.modo_session.initialize()
 # at the initialization stage above.
 print 'Hello World!'
 
-# Here we say hello in the logger! (With critical importance)
+# Here we say hello in the script logger! (With critical importance)
 import logging
-logging.critical('Hello World!')
+logger = logging.getLogger('script')
+logger.critical('Hello World!')
