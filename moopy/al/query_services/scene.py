@@ -16,7 +16,7 @@ def list_roots():
 
 def list_attributes(root_attribute):
     '''Return a tuple of all the attributes found within a .'''
-    return _service_object.query('%s ?' % root_attribute)
+    return _service_object.query(root_attribute)
 
 def get_is_type(item_type):
     '''Modo Equivalent: query sceneservice isType ? item_type'''

@@ -11,6 +11,8 @@ import lx
 #: object here.
 _service_object = lx.Service('platformservice')
 
+select = _service_object.select
+
 def list_roots():
     '''Return a tuple of all the roots found in platformservice.'''
     return _service_object.query()
@@ -78,6 +80,3 @@ def get_serialnumber():
     ''''''
     return int(_service_object.query('serialnumber'))
 
-def select(*selectors):
-    ''''''
-    _service_object.select(*selectors)
