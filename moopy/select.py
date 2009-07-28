@@ -35,7 +35,7 @@ def get_selected_vertices():
     
     @return: A vertex collection, or None if none are selected.
     '''
-    selected_indices = moopy.al.query_services.layer.get_selected_vert_indices()
+    selected_indices = moopy.al.query_services.layer.get_vert_indices()
     
     if selected_indices is None:
         return None

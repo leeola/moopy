@@ -33,8 +33,18 @@ class ImproperMatchType(ChannelsError):
         if self.message is not None:
             return '\n%s\nChannel #1: %s\nChannel #2: %s' % self.message
 
-class ModoLibrariesNotFound(MoopyError):
-    '''The libraries provided by an instance of modo were not found.
+class ItemError(MoopyError):
+    '''The base item error.
+    '''
+    pass
+
+class ItemIDNonExistantError(ItemError):
+    '''An item id does not exist.
+    '''
+    pass
+
+class ItemIDNotClassTypeError(ItemError):
+    '''An item id given to a specific Class constructor does not exist.
     '''
     pass
 

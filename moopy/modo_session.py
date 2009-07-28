@@ -290,7 +290,8 @@ class ScriptOptions(object):
 
         # If there is an intersection of all_option_keywords and the newly
         # supplied keywords, raise an exception.
-        if self.all_option_keywords.intersection(keywords):
+        if (keywords is not None and 
+            self.all_option_keywords.intersection(keywords)):
             raise errors.DuplicateArgumentSupplied(
                 'Argument: %s' % self.all_option_keywords.intersection(keywords)
             )
@@ -322,9 +323,10 @@ class ScriptOptions(object):
         logging.getLogger('moopy').debug('Appending a script argument with the '
                                          'values "%s"' % option_makeup)
 
-        # Append the script keywords to the keywords list, so we can
-        # check it against what the user supplied later on.
-        self.all_option_keywords.update(keywords)
+        if keywords is not None:
+            # Append the script keywords to the keywords list, so we can
+            # check it against what the user supplied later on.
+            self.all_option_keywords.update(keywords)
 
         # Add the argument dict to the self.arguments list.
         self.options.append(option_makeup)

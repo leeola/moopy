@@ -7,7 +7,10 @@ import moopy.al.query_services.layer
 
 
 class Clip(object):
-    '''A representation of a single clip item.'''
+    '''A representation of a single clip item.
+    
+    @todo: Convert this class to use the sceneservice's clip.
+    '''
 
     def __init__(self, clip_index, *args, **kwargs):
         ''''''
@@ -38,17 +41,17 @@ class Clip(object):
         '''
     )
     
-    def _get_filename(self):
+    def _get_path(self):
         ''''''
-        return moopy.al.query_services.layer.get_clip_filename(self._index)
+        return moopy.al.query_services.layer.get_clip_path(self._index)
     
-    def _set_filename(self, value):
+    def _set_path(self, value):
         ''''''
         raise NotImplementedError()
     
-    filename = property(
-        _get_filename,
-        _set_filename,
+    path = property(
+        _get_path,
+        _set_path,
         doc='''
         '''
     )    

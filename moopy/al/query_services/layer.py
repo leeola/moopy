@@ -47,10 +47,6 @@ def list_attributes(root_attribute):
     '''Return a tuple of all the attributes found within a .'''
     return query(root_attribute)
 
-def get_clip_filename(clip_index):
-    ''''''
-    raise NotImplementedError()
-
 def get_clip_indicies():
     ''''''
     return _convert_strings_to_ints(query('clips'))
@@ -59,6 +55,11 @@ def get_clip_name(clip_index):
     ''''''
     select('clip.name', str(clip_index))
     return query('clip.name')
+
+def get_clip_path(clip_index):
+    ''''''
+    select('clip.file', str(clip_index))
+    return query('clip.file')
 
 def get_layer_groups():
     ''''''
@@ -72,19 +73,29 @@ def get_layer_name():
     ''''''
     return query('layer.name')
 
-def get_selected_vert_indices():
-    ''''''
-    select('selected')
-    return _convert_strings_to_ints(query('verts'))
-
 def get_uv_pos(vertex_index, uv_map_name=None):
     ''''''
     if uv_map_name is not None:
         raise NotImplementedError()
     
     # I think this is just vert indices.. i think.
+    # Also, i'm doing this twice because of a weird problem.
+    # The first query, results in a different position than the 2nd query.
+    # If i call select twice, that issue doesn't appear. Later this needs
+    # to be fixed.
+    select('uv.pos', str(vertex_index))
     select('uv.pos', str(vertex_index))
     return query('uv.pos')
+
+def get_vert_indices():
+    ''''''
+    select('selected')
+    return _convert_strings_to_ints(query('verts'))
+
+def get_vert_pos(vert_index):
+    ''''''
+    select('vert.pos', str(vert_index))
+    return query('vert.pos')
 
 def select_layer_all():
     ''''''

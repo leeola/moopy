@@ -1,10 +1,15 @@
 ''''''
 
 # Standard
+import logging
 # Related
+import lx
 # Local
+import moopy.al.commands.select
+import moopy.al.commands.vertex_map
 import moopy.al.query_services.layer
 
+logger = logging.getLogger('moopy')
 
 class MeshElement(object):
     '''The base mesh element class.'''
@@ -62,6 +67,11 @@ class Vertex(MeshElement):
         ''''''
         return 'Mesh Vertex, Index "%s"' % (self._index)
     
+    @classmethod
+    def new(self):
+        ''''''
+        raise NotImplementedError()
+    
     def uv_position(self, map_name=None):
         '''This method of accessing the U & V coordinates of a vertex will
         probably be deprecated at some point.
@@ -71,6 +81,20 @@ class Vertex(MeshElement):
             raise NotImplementedError()
         
         return moopy.al.query_services.layer.get_uv_pos(self._index, map_name)
+    
+    def position(self):
+        '''This method of accessing the global position of a vertex will
+        be deprecated at some point soon.
+        '''
+        
+        return moopy.al.query_services.layer.get_vert_pos(self._index)
+    
+    def set_weight(self, map_name, weight):
+        '''
+        Again, this method will get nixed in favor of an OOP approach.
+        '''
+        moopy.al.commands.vertex_map.set_vertex_value(
+            map_name, self._index, weight)
 
 class MeshElementCollection(object):
     '''The base mesh element collection class.'''
@@ -89,12 +113,12 @@ class MeshElementCollection(object):
     
     def __repr__(self):
         ''''''
-        return ("<class 'moopy.mesh_element.MeshElementCollection',"
-                "index:%s>" % (self._index))
+        return "<class 'moopy.mesh_element.MeshElementCollection', len:%s>" % (
+            self.__len__())
     
     def __str__(self):
         ''''''
-        return 'Mesh Element Collection, Index "%s"' % (self._index)
+        return 'Mesh Element Collection, Total Elements %s' % (self.__len__())
     
     def _get_indices(self):
         ''''''
@@ -121,10 +145,13 @@ class VertexCollection(MeshElementCollection):
     
     def __repr__(self):
         ''''''
-        return "<class 'moopy.mesh_element.VertexCollection', index:%s>" % (
-            self._index)
+        return "<class 'moopy.mesh_element.VertexCollection', len:%s>" % (
+            self.__len__())
     
     def __str__(self):
         ''''''
-        return 'Vertex Collection, Index "%s"' % (self._index)
+        return 'Vertex Collection, Total Vertices %s' % (self.__len__())
 
+    def by_index(self, index):
+        '''Get a vertex by it's index.'''
+        return Vertex(index)
