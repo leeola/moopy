@@ -128,31 +128,32 @@ class ImageMap(Item):
         if al.query_services.scene.get_item_type(item_id) != 'imageMap':
             errors.ItemIDNotClassTypeError('ItemID:%s is not an ImageMap.')
         
-        self._type = 'imageMap'
-        self._label = 'Image Map'
+            self._type = 'imageMap'
+            self._label = 'Image Map'
 
     def __repr__(self):
         '''
         '''
-        return "<class 'moopy.item.ImageMap', name:%s>" % (self.name)
+        return "<class 'moopy.item.ImageMap', name:'%s'>" % (self.name)
 
     def __str__(self):
         '''
         '''
-        return 'Image Map, Name %s' % (self.name)
+        return "Image Map, Name '%s'" % (self.name)
     
     @classmethod
     def new(cls, name=None):
         '''Create a new image map and return that object.'''
-        raise NotImplementedError()
-        
-        item_id = al.commands.shader.create_image_map()
-        
+        # Create the image map.
+        al.commands.shader.create_image_map()
+        # Get the item id
+        item_id = al.query_services.scene.get_scene_selection('imageMap')
+        # Create the instance
         image_map = cls(item_id)
-        
+        # Rename it if needed.
         if name is not None:
             image_map.name = name
-        
+        # Return it.
         return image_map
 
 class SceneItem(Item):

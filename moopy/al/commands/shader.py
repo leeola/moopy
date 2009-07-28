@@ -13,6 +13,8 @@ def create(shader_type):
     return lx.eval('shader.create %s' % shader_type)
     
 def create_image_map():
-    '''Create a new image map and add it to the current shader context.
+    '''Create a new image map.
     '''
-    return lx.eval('shader.create imageMap')
+    lx.eval('shader.create constant')
+    lx.eval('item.setType {Image Map}')
+    
