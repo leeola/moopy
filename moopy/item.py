@@ -74,6 +74,16 @@ class Item(object):
         '''
     )
     
+    def _get_item_id(self):
+        ''''''
+        return self._item_id
+    
+    item_id = property(
+        _get_item_id,
+        doc=''' The item ID.
+        '''
+    )    
+    
     def _get_mtype(self):
         ''''''
         return self._mtype
@@ -107,7 +117,23 @@ class Item(object):
         _set_name,
         doc='''The name of the item in modo.
         '''
-    )    
+    )
+
+    def _get_visibility(self):
+        ''''''
+        raise exceptions.NotImplementedError()
+
+    def _set_visibility(self, value):
+        ''''''
+        raise exceptions.NotImplementedError()
+
+    visibility = property(
+        _get_visibility,
+        _set_visibility,
+        doc='''The visibility of the item, not to be confused with L{the alpha
+        of the item. <self.channels.alpha>}.
+        '''
+    )
     
     def instance(self, name=None):
         ''''''
@@ -182,47 +208,6 @@ class SceneItem(Item):
         '''
         return 'Scene Item, Name %s' % (self.name)
 
-    def _get_layer_id(self):
-        ''''''
-        return self._layer_id
-
-    layer_id = property(
-        _get_layer_id,
-        doc='''The layer id of the item.
-        '''
-    )
-
-    def _get_name(self):
-        ''''''
-        return self._name
-
-    def _set_name(self, value):
-        ''''''
-        raise exceptions.NotImplementedError()
-
-    name = property(
-        _get_name,
-        _set_name,
-        doc='''The name of the item, human readable.
-        '''
-    )
-
-    def _get_visibility(self):
-        ''''''
-        raise exceptions.NotImplementedError()
-
-    def _set_visibility(self, value):
-        ''''''
-        raise exceptions.NotImplementedError()
-
-    visibility = property(
-        _get_visibility,
-        _set_visibility,
-        doc='''The visibility of the item, not to be confused with L{the alpha
-        of the item. <self.channels.alpha>}.
-        '''
-    )
-
     def add_child(self, item):
         '''Make this item the parent of the given item.
         '''
@@ -267,13 +252,20 @@ class SceneItem(Item):
 class ItemCollection(object):
     '''A collection of items.'''
 
-    def __init__(self, ids, *args, **kwargs):
+    def __init__(self, ids=None, instances=None, collections=None,
+                 *args, **kwargs):
         '''
-        @param ids: An iterable object containing string IDs of each item
-        to be in this collection. Note that if any IDs given are not valid,
-        they will not fail until accessed.
         '''
         super(ItemCollection, self).__init__(*args, **kwargs)
+        
+        if collections is not None:
+            raise NotImplementedError()
+        
+        if instances is not None:
+            raise NotImplementedError()
+        
+        if ids is None:
+            ids = []
         
         #: An iterable object of string IDs.
         self._ids = ids
@@ -291,7 +283,7 @@ class ItemCollection(object):
     def __str__(self):
         '''
         '''
-        return 'Scene Item, Name %s' % (self.name)
+        return 'Item Collection, len:%s' % (self.__len__())
     
     def __len__(self):
         ''''''
@@ -306,9 +298,20 @@ class ItemCollection(object):
         else:
             return self._item_cache[item_id]
     
-    def new_of_type(self, item_class):
-        '''Create a new collection from this collection, of the type
-        defined in the param:item_class.
-        '''
+    def append_collection(self, collection):
+        ''''''
         raise NotImplementedError()
+
+    def append_item(self, item):
+        ''''''
+        if self._item_cache.has_key(item.item_id):
+            # This should be an actual error, some type of "collection already
+            # contains item". but since there is no actual error for that case,
+            # raise not implemented.
+            raise NotImplementedError()
         
+        self._ids.append(item.item_id)
+        self._item_cache[item.item_id] = item_instance
+
+        
+    
