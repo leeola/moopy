@@ -11,6 +11,13 @@ import al.query_services.scene
 import al.query_services.layer
 
 
+def get_id_by_index(index, item_type=None):
+    ''''''
+    if item_type is not None:
+        return al.query_services.scene.get_item_id(index, item_type)
+    else:
+        return al.query_services.scene.get_item_id(index)
+
 def get_item_by_name(name):
     ''''''
     raise NotImplementedError()
@@ -37,6 +44,8 @@ class Item(object):
     '''The base item. Not indended for direct use, but feel free to
     inherit it.
     '''
+    _mtype = None
+    _mtype_label = None
 
     def __init__(self, item_id, *args, **kwargs):
         '''
@@ -45,8 +54,6 @@ class Item(object):
         
         self._channels = None
         self._item_id = item_id
-        self._mtype = None
-        self._mtype_label = None
         
         # If this fails, we can assume the item_id does not exist.
         try:
@@ -71,6 +78,24 @@ class Item(object):
     channels = property(
         _get_channels,
         doc=''' The channels object for this object.
+        '''
+    )
+    
+    def _get_children(self):
+        ''''''
+        children = list(
+            al.query_services.scene.get_item_children(self._item_id))
+        children.reverse()
+        return ItemCollection(children)
+    
+    def _set_children(self, value):
+        ''''''
+        raise NotImplementedError()
+    
+    children = property(
+        _get_children,
+        _set_children,
+        doc='''
         '''
     )
     
@@ -146,16 +171,18 @@ class Item(object):
 
 class ImageMap(Item):
     '''An image map, as seen in the shader tree.'''
+        
+    _mtype = 'imageMap'
+    _mtype_label = 'Image Map'
 
-    def __init__(self, item_id, *args, **kwargs):
+    def __init__(self, item_id, index=None, *args, **kwargs):
         ''''''
         super(ImageMap, self).__init__(item_id, *args, **kwargs)
         
+        self._index = index
+        
         if al.query_services.scene.get_item_type(item_id) != 'imageMap':
             errors.ItemIDNotClassTypeError('ItemID:%s is not an ImageMap.')
-        
-            self._type = 'imageMap'
-            self._label = 'Image Map'
 
     def __repr__(self):
         '''
@@ -166,6 +193,46 @@ class ImageMap(Item):
         '''
         '''
         return "Image Map, Name '%s'" % (self.name)
+    
+    def _get_clip_path(self):
+        ''''''
+        return al.query_services.layer.get_texture_clipfile(self.index)
+    
+    def _set_clip_path(self, value):
+        ''''''
+        raise NotImplementedError()
+    
+    clip_path = property(
+        _get_clip_path,
+        _set_clip_path,
+        doc='''A path of the clipfile (if any) that this instance contains.
+        
+        @important: This is an expensive property to get, if index is None.
+        This is because the layerservice query currently (and unfortunately)
+        required to get the clipfile information, requires the index. To
+        understand why needing the index could be expensive, read the docs
+        of L{<self.index>}
+        '''
+    )
+    
+    def _get_index(self):
+        ''''''
+        return al.query_services.layer.get_texture_index(self._item_id)
+    
+    def _set_index(self, value):
+        ''''''
+        raise NotImplementedError()
+    
+    index = property(
+        _get_index,
+        _set_index,
+        doc='''The index of the texture in the shader tree.
+        
+        @important: that this object often is created without knowledge of
+        the index. So if we don't have it, we must loop through all textures
+        until we run into this image map's ID. A very expensive procedure.
+        '''
+    )
     
     @classmethod
     def new(cls, name=None):
@@ -181,6 +248,20 @@ class ImageMap(Item):
             image_map.name = name
         # Return it.
         return image_map
+
+class PolyRender(Item):
+    ''''''
+
+    _mtype = 'polyRender'
+    _mtype_label = 'Poly Render'
+    
+    def __init__(self, item_id, *args, **kwargs):
+        ''''''
+        super(PolyRender, self).__init__(item_id, *args, **kwargs)
+        
+        if al.query_services.scene.get_item_type(item_id) != 'polyRender':
+            errors.ItemIDNotClassTypeError('ItemID:%s is not a PolyRender.')
+
 
 class SceneItem(Item):
     '''The base scene item. Not indended for direct use, but feel free to
@@ -252,33 +333,26 @@ class SceneItem(Item):
 class ItemCollection(object):
     '''A collection of items.'''
 
-    def __init__(self, ids=None, instances=None, collections=None,
-                 *args, **kwargs):
+    def __init__(self, ids=None, *args, **kwargs):
         '''
         '''
         super(ItemCollection, self).__init__(*args, **kwargs)
         
-        if collections is not None:
-            raise NotImplementedError()
-        
-        if instances is not None:
-            raise NotImplementedError()
-        
-        if ids is None:
-            ids = []
-        
-        #: An iterable object of string IDs.
-        self._ids = ids
-        #: This serves as cache for the items contained in this class.
-        #: That way there is no need to continually create new objects for
-        #: each item.
-        self._item_cache = dict.fromkeys(ids)
+        if ids is not None:
+            #: An iterable object of string IDs.
+            self._ids = ids
+            #: This serves as cache for the items contained in this class.
+            #: That way there is no need to continually create new objects for
+            #: each item.
+            self._item_cache = dict.fromkeys(ids)
+        else:
+            self._ids = []
+            self._item_cache = {}
     
     def __repr__(self):
         '''
         '''
-        return "<class 'moopy.item.ItemCollection', name:%s, len:%s>" % (
-            self.name, self.__len__())
+        return "<class 'moopy.item.ItemCollection', len:%s>" % (self.__len__())
 
     def __str__(self):
         '''
@@ -289,8 +363,9 @@ class ItemCollection(object):
         ''''''
         return len(self._ids)
     
-    def __getitem__(self, item_id):
+    def __getitem__(self, key):
         ''''''
+        item_id = self._ids[key]
         if self._item_cache[item_id] is None:
             item = get_item_class_from_id(item_id)(item_id)
             self._item_cache[item_id] = item
@@ -312,6 +387,36 @@ class ItemCollection(object):
         
         self._ids.append(item.item_id)
         self._item_cache[item.item_id] = item_instance
-
-        
     
+    def filter_type(self, item_type):
+        '''Return a new item collection based on any item matching the type
+        given to this method.'''
+        
+        matching_item_ids = []
+        
+        for item_id in self._ids:
+            if (al.query_services.scene.get_item_type(item_id) == 
+                item_type._mtype):
+                matching_item_ids.append(item_id)
+        
+        return ItemCollection(matching_item_ids)
+    
+    @classmethod
+    def new_from_type(cls, item_type):
+        ''''''
+        type_switch = {
+            ImageMap:al.query_services.scene.get_all_image_map_ids,
+        }
+        
+        if type_switch.has_key(item_type):
+            return ItemCollection(type_switch[item_type]())
+        else:
+            # Eventually when all types are covered, this will be an actual
+            # informative error about how the type supplied does not exist.
+            # For now, its safe to assume they don't exist.
+            raise NotImplementedError()
+    
+    def new_from_types(self, item_type):
+        ''''''
+        raise NotImplementedError()
+        

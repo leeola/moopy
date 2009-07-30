@@ -26,6 +26,39 @@ def list_attributes(root_attribute):
     select()
     return query(root_attribute)
 
+def get_all_image_map_ids():
+    ''''''
+    return get_all_item_ids('imageMap')
+
+def get_all_item_ids(item_type):
+    ''''''
+    items = []
+    total_items = query('%s.N' % item_type)
+    for i in range(total_items):
+        select(item_type, str(i))
+        items.append(query('%s.id' % item_type))
+        
+    if items:
+        return items
+    else:
+        return None
+
+def get_all_texture_ids():
+    ''''''
+    return get_all_item_ids('imageMap')
+
+def get_item_children(item_id):
+    '''Modo Equivalent: query sceneservice item.children ? item_id'''
+    
+    select('item.children', item_id)
+    return query('item.children')
+
+def get_item_id(index, item_type='item'):
+    '''Modo Equivalent: query sceneservice item.id ? index'''
+    
+    select('%s.id' % item_type, str(index))
+    return query('%s.id' % item_type)
+
 def get_item_name(item_id):
     '''Modo Equivalent: query sceneservice item.name ? item_id'''
     

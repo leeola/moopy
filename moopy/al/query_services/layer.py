@@ -73,6 +73,24 @@ def get_layer_name():
     ''''''
     return query('layer.name')
 
+def get_texture_clipfile(texture_index):
+    ''''''
+    select('texture.clipfile', str(texture_index))
+    return query('texture.clipfile')
+
+def get_texture_index(texture_id):
+    ''''''
+    select()
+    total_textures = query('texture.N')
+
+    for i in range(total_textures):
+        select('texture.id', str(i))
+        if query('texture.id') == texture_id:
+            return i
+    
+    # If the texture_id is not found, raise a NotImplemented for now.
+    raise NotImplementedError()
+
 def get_uv_pos(vertex_index, uv_map_name=None):
     ''''''
     if uv_map_name is not None:
