@@ -36,11 +36,6 @@ logger.debug('Total Vertices: %s' % len(vertex_collection))
 # Create a general dict where we'll store a bunch of general info.
 vertex_info = {}
 
-# Also, for symmetry, store the verts positions. We can then later, invert
-# the numeric value to get the symmetrical vertex. And if it doesn't exist,
-# the world explodes.
-symmetry_verts = {}
-
 # Loop through all the verts and get their u & v positions.
 for vertex in vertex_collection:
     uv_pos = vertex.uv_position()
@@ -48,9 +43,9 @@ for vertex in vertex_collection:
     vertex_info[vertex.index] = {
         'u':uv_pos[0],
         'v':uv_pos[1],
+        'x_pos':world_pos[0],
         'total_weight':0.0 # Also, add a default "total_weight" for later.
     }
-    symmetry_verts[world_pos[0]] = vertex
 
 # Create a dict where we'll store the weight information we get
 # from the images. We store it in this way because of how we write the weights.
@@ -113,18 +108,26 @@ image_maps = poly_render.children.filter_type(moopy.item.ImageMap)
 for image_map in image_maps:
     parse_image(image_map.clip_path)
 
-for weight_name in ordered_weight_names:
-    # Now because this is an early and ugly test,
-    # we simply mass create all the weight maps we need.
-    # So i hope you don't have any with the same name.. :)
-    moopy.al.commands.vertex_map.new_weight_map(weight_name)
-
-    # After creation, they are automatically selected so now we work with
-    # that. Loop through all the verts and start assigning weights
-    # for this map.
+def assign_weights_to_map(weight_name, side=None):
+    ''''''
+    
+    source_weight_name = weight_name
+    
+    if side == 'left':
+        weight_name = 'L_%s' % weight_name
+    elif side == 'right':
+        weight_name = 'R_%s' % weight_name
+    
     for (vertex_index,
-         vertex_weight_value) in weight_information[weight_name].items():
-
+         vertex_weight_value) in weight_information[source_weight_name].items():
+        
+        if side == 'left' and vertex_info[vertex_index]['x_pos'] < 0:
+            continue
+        elif side == 'right' and vertex_info[vertex_index]['x_pos'] > 0:
+            continue
+        elif side is not None and vertex_info[vertex_index]['x_pos'] == 0:
+            vertex_weight_value = vertex_weight_value / 2
+        
         total_weight = vertex_info[vertex_index]['total_weight']
 
         if total_weight >= 1.0:
@@ -146,6 +149,21 @@ for weight_name in ordered_weight_names:
 
         # Also, add this to whatever the total is.
         vertex_info[vertex_index]['total_weight'] += vertex_weight_value
+
+for weight_name in ordered_weight_names:
+    # Now because this is an early and ugly test,
+    # we simply mass create all the weight maps we need.
+    # So i hope you don't have any with the same name.. :)
+    
+    if script_options['xSymmetry']:
+        moopy.al.commands.vertex_map.new_weight_map('L_%s' % weight_name)
+        assign_weights_to_map(weight_name, 'left')
+        moopy.al.commands.vertex_map.new_weight_map('R_%s' % weight_name)
+        assign_weights_to_map(weight_name, 'right')
+    else:
+        moopy.al.commands.vertex_map.new_weight_map(weight_name)
+        assign_weights_to_map(weight_name)
+
 
 # Now we have assigned all the vertices with values coorisponding to the
 # images, but there are still many with no image color, and therefor
