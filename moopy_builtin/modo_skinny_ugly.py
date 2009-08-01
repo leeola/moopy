@@ -6,7 +6,6 @@
 import logging
 import os
 # Related
-import png
 import moopy.item
 import moopy.modo_session
 import moopy.select
@@ -60,8 +59,47 @@ for vertex in vertex_collection:
 weight_information = {}
 ordered_weight_names = []
 
-def parse_image(path):
+def parse_image_with_pil(path):
     ''''''
+    import PIL.Image
+    
+    file_name = os.path.basename(path)
+
+    logger.debug('Loading %s' % path)
+
+    # Load the image
+    image = PIL.Image.open(path)
+    image_width, image_height = image.size
+    
+    logger.debug('Loaded %s' % (file_name))
+
+    weight_information[file_name] = {}
+    ordered_weight_names.append(file_name)
+    
+    # For every vertex, look up its position.
+    for vertex_index in vertex_info:
+
+        x = int(image_width * vertex_info[vertex_index]['u'])
+        y = int(image_height - image_height * vertex_info[vertex_index]['v'])
+        
+        if x == image_height:
+            x -= 1
+        if y == image_height:
+            y -= 1
+        
+        pixel_alpha = image.getpixel((x, y))[3] / 255.0
+        
+        weight_information[file_name][vertex_index] = pixel_alpha
+
+    logger.debug(
+        'Image %s resulted in the following weights:' % file_name)
+    logger.debug(str(weight_information[file_name]))
+    
+
+def parse_image_with_pngpy(path):
+    ''''''
+    import png
+    
     file_name = os.path.basename(path)
 
     logger.debug('Loading %s' % path)
@@ -106,7 +144,7 @@ image_maps = poly_render.children.filter_type(moopy.item.ImageMap)
 # Now for the _SLOW_ part. Loop through each clip, load the image into python,
 # and start grabbing verts.
 for image_map in image_maps:
-    parse_image(image_map.clip_path)
+    parse_image_with_pil(image_map.clip_path)
 
 def assign_weights_to_map(weight_name, side=None):
     ''''''
