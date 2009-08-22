@@ -10,8 +10,8 @@ to the original modo script calling method "@somescript.py".'''
 # Standard
 import os
 # Related
-# Local
 import lx
+# Local
 
 arg_split = lx.arg().split(' ', 1)
 target_path = arg_split[0]
