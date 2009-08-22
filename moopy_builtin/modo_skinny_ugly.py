@@ -6,12 +6,13 @@
 import logging
 import os
 # Related
+import lx
 import moopy.item
 import moopy.modo_session
 import moopy.select
 import moopy.al.commands.vertex_map
 # Local
-moopy.modo_session.initialize(moopy_loglvl=logging.DEBUG, loglvl=logging.DEBUG)
+moopy.modo_session.initialize()
 
 logger = logging.getLogger('script')
 
@@ -19,6 +20,8 @@ logger = logging.getLogger('script')
 script_options = moopy.modo_session.ScriptOptions()
 script_options.add_option(default=False, allowed_types=[bool],
                           keywords=['xSymmetry', 'xSym'])
+script_options.add_option(default=False, allowed_types=[bool],
+                          keywords=['base_weight', 'base'])
 script_options.validate_options()
 
 # Get the selected vertices, if any.
@@ -43,7 +46,10 @@ for vertex in vertex_collection:
         'u':uv_pos[0],
         'v':uv_pos[1],
         'x_pos':world_pos[0],
-        'total_weight':0.0 # Also, add a default "total_weight" for later.
+        'total_weight':0.0, # Also, add a default "total_weight" for later.
+        'highest_weight':0.0,
+        'highest_weight_maps':[], 
+        'weights':[], # This is just used for debugging. We append each write.
     }
 
 # Create a dict where we'll store the weight information we get
@@ -159,6 +165,9 @@ def assign_weights_to_map(weight_name, side=None):
     for (vertex_index,
          vertex_weight_value) in weight_information[source_weight_name].items():
         
+        # This is a horrendous implementation of weighting symmetry.
+        # On the real version of the script, this will be vastly improved.
+        # For now though, its quick, its dirty, and it gets the job done.
         if side == 'left' and vertex_info[vertex_index]['x_pos'] < 0:
             continue
         elif side == 'right' and vertex_info[vertex_index]['x_pos'] > 0:
@@ -187,6 +196,19 @@ def assign_weights_to_map(weight_name, side=None):
 
         # Also, add this to whatever the total is.
         vertex_info[vertex_index]['total_weight'] += vertex_weight_value
+        vertex_info[vertex_index]['weights'].append(
+            '%s:%s' % (weight_name, vertex_weight_value))
+        
+        # If this value is the highest this vert has been assigned yet,
+        # store it.
+        highest_weight = vertex_info[vertex_index]['highest_weight']
+        if vertex_weight_value > highest_weight:
+            vertex_info[vertex_index]['highest_weight'] = vertex_weight_value
+            vertex_info[vertex_index]['highest_weight_maps'] = [weight_name]
+        elif vertex_weight_value == highest_weight:
+            vertex_info[vertex_index]['highest_weight_maps'].append(
+                weight_name)
+            
 
 for weight_name in ordered_weight_names:
     # Now because this is an early and ugly test,
@@ -196,31 +218,62 @@ for weight_name in ordered_weight_names:
     if script_options['xSymmetry']:
         moopy.al.commands.vertex_map.new_weight_map('L_%s' % weight_name)
         assign_weights_to_map(weight_name, 'left')
+        lx.eval('deform.mapadd')
         moopy.al.commands.vertex_map.new_weight_map('R_%s' % weight_name)
         assign_weights_to_map(weight_name, 'right')
+        lx.eval('deform.mapadd')
     else:
         moopy.al.commands.vertex_map.new_weight_map(weight_name)
         assign_weights_to_map(weight_name)
+        lx.eval('deform.mapadd')
 
 
-# Now we have assigned all the vertices with values coorisponding to the
-# images, but there are still many with no image color, and therefor
-# no weight. Apply all these with whatever weight fills them to 1.0 weight in
-# a last weightmap called "base_weight" (hopefully no one has an image like
-# this.. hmm.. lol)
-moopy.al.commands.vertex_map.new_weight_map('base_weight')
-
-for vertex_index in vertex_info:
-
-    total_weight = vertex_info[vertex_index]['total_weight']
-
-    if total_weight >= 1.0:
-        continue
-
-    difference = 1.0 - total_weight
-
-    vertex_collection.by_index(vertex_index).set_weight(
-        'base_weight', difference)
+if script_options['base_weight']:
+    moopy.al.commands.vertex_map.new_weight_map('base_weight')
+    
+    for vertex_index in vertex_info:
+    
+        total_weight = vertex_info[vertex_index]['total_weight']
+    
+        if total_weight >= 1.0:
+            continue
+    
+        difference = 1.0 - total_weight
+    
+        vertex_collection.by_index(vertex_index).set_weight(
+            'base_weight', difference)
+    
+    lx.eval('deform.mapadd')
+else:
+    
+    for vertex_index in vertex_info:
+    
+        total_weight = vertex_info[vertex_index]['total_weight']
+        highest_weight = vertex_info[vertex_index]['highest_weight']
+        highest_weight_maps = vertex_info[vertex_index]['highest_weight_maps']
+    
+        if total_weight >= 1.0:
+            continue
+    
+        difference = (1.0 - total_weight) / float(len(highest_weight_maps))
+     
+        logger.debug('Supplementing "%s", total:%s, diff:%s, vert:%s' % (
+            highest_weight_maps, total_weight, difference, vertex_index))
+        
+        added_weight = highest_weight + difference
+        
+        # 228, 229, 230 are some bad ones.
+        if vertex_index == 195:
+            pass
+        
+        for weight_name in highest_weight_maps:
+            vertex_collection.by_index(vertex_index).set_weight(
+                weight_name, added_weight)
+            
+            vertex_info[vertex_index]['total_weight'] += difference
+            vertex_info[vertex_index]['weights'].append(
+                '%s:%s' % (weight_name, difference))
+    
 
 # This dumpy test is done.. i think :)
 print 'Script Completed Successfully!'
