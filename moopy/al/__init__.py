@@ -1,10 +1,9 @@
-'''al stands for Abstraction Layer. Everything found within here is a rough
-wrapper around the modo scripting language. The goal is to keep a similar
-design/layout but to make everything fully python.
+'''al stands for Abstraction Layer. The AL takes common and usually simple
+tasks in modo, such as created a vertex, or querying the number of verts in
+a mesh, and wraps them in simple module level functions.
 
-Eg, if you need to query the app version, access
-L{al.query_services.platform.get_appversion()
-<al.query_services.platform.get_appversion>}.
+The goal of this is to keep all modo specific calls within this package,
+so that any changes within modo need to only be updated in this package.
 '''
 
 # Standard
