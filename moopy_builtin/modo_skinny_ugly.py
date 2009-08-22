@@ -1,5 +1,10 @@
 #python
-'''
+'''The "ugly" version of this script was basically written quickly with no
+real focus on the code being readable, clean, etc. It was written to test the
+concept of modo skinny.
+
+Because of the hastened testing, this file is buggy and not intended
+for any real use. See L{<modo_skinny>} for the real file.
 '''
 
 # Standard
