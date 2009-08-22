@@ -1,0 +1,60 @@
+#python
+'''This file is a wrapper file ment to enable proper debugging and error
+exceptions to be handled by IDEs such as WingIDE.
+
+To use it, simply run the command "@@ somefile.py script_args" in modo.
+
+The reason for the odd name "@", is so that it feels atleast somewhat similar
+to the original modo script calling method "@somescript.py".'''
+
+# Standard
+import os
+# Related
+# Local
+import lx
+
+arg_split = lx.arg().split(' ', 1)
+target_path = arg_split[0]
+
+# Grab the two arg/s values from modo and store their newly modified value,
+# taking the filename argument out.
+try:
+    lx_arg = arg_split[1]
+    lx_args = lx.args()[1:]
+except IndexError:
+    lx_arg = ''
+    lx_args = ()
+
+# Create the two fake arg functions, which we'll use to replace the
+# originals with.
+def arg():
+    ''''''
+    return lx_arg
+
+def args():
+    ''''''
+    return lx_args
+
+# Replace the values within lx.
+lx.arg = arg
+lx.args = args
+
+# Look to see if the target_path is defined absolutely, eg, it starts with /
+if target_path.startswith(os.path.sep):
+    # Run the script, with an absolute path.
+    execfile(target_path)
+else:
+    # Since it isn't defined absolutely, loop through each sys.path
+    # and try running that file in each directory.
+    for sys_path in os.sys.path:
+        try:
+            execfile('%s/%s' % (sys_path, target_path.replace('./', '', 1)))
+        except IOError:
+            continue
+        # If continue wasn't triggered, we ran the file. In which case
+        # we want to break the loop, so the for..else doesn't throw an
+        # exception.
+        break
+    else:
+        # No path contained the desired file, raise an IOError.
+        raise IOError()
