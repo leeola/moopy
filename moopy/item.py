@@ -7,6 +7,7 @@
 import errors
 import al.commands.item
 import al.commands.shader
+import al.query
 import al.query_services.scene
 import al.query_services.layer
 
@@ -30,6 +31,7 @@ def get_item_class_from_id(item_id):
     '''Return the Class of the object type.'''
     type_switch = {
         'imageMap':ImageMap,
+        'mesh':Mesh,
     }
     
     item_type = al.query_services.scene.get_item_type(item_id)
@@ -260,7 +262,8 @@ class PolyRender(Item):
         super(PolyRender, self).__init__(item_id, *args, **kwargs)
         
         if al.query_services.scene.get_item_type(item_id) != 'polyRender':
-            errors.ItemIDNotClassTypeError('ItemID:%s is not a PolyRender.')
+            raise errors.ItemIDNotClassTypeError(
+                'ItemID:%s is not a PolyRender.')
 
 
 class SceneItem(Item):
@@ -282,12 +285,12 @@ class SceneItem(Item):
         '''
         '''
         return "<class 'moopy.item.SceneItem', layer_id:%s, name:%s>" % (
-            self.layer_id, self.name)
+            self._layer_id, self._name)
 
     def __str__(self):
         '''
         '''
-        return 'Scene Item, Name %s' % (self.name)
+        return 'Scene Item, Name %s' % (self._name)
 
     def add_child(self, item):
         '''Make this item the parent of the given item.
@@ -329,6 +332,32 @@ class SceneItem(Item):
         '''
         raise exceptions.NotImplementedError()
 
+class Mesh(SceneItem):
+    ''''''
+
+    _mtype = 'mesh'
+    _mtype_label = 'Mesh'
+    
+    def __init__(self, item_id, *args, **kwargs):
+        ''''''
+        super(Mesh, self).__init__(item_id, *args, **kwargs)
+        
+        if al.query_services.scene.get_item_type(item_id) != 'mesh':
+            raise errors.ItemIDNotClassTypeError(
+                'ItemID:%s is not a Mesh Item.')
+
+    def __repr__(self):
+        '''
+        '''
+        return "<class 'moopy.item.Mesh', layer_id:%s, name:'%s'>" % (
+            self._layer_id, self._name)
+
+    def __str__(self):
+        '''
+        '''
+        return 'Mesh Item, Name %s' % (self._name)
+
+
 
 class ItemCollection(object):
     '''A collection of items.'''
@@ -340,7 +369,7 @@ class ItemCollection(object):
         
         if ids is not None:
             #: An iterable object of string IDs.
-            self._ids = ids
+            self._ids = set(ids)
             #: This serves as cache for the items contained in this class.
             #: That way there is no need to continually create new objects for
             #: each item.
@@ -363,30 +392,24 @@ class ItemCollection(object):
         ''''''
         return len(self._ids)
     
-    def __getitem__(self, key):
+    def __getitem__(self, index):
         ''''''
-        item_id = self._ids[key]
-        if self._item_cache[item_id] is None:
-            item = get_item_class_from_id(item_id)(item_id)
-            self._item_cache[item_id] = item
-            return item
-        else:
-            return self._item_cache[item_id]
-    
-    def append_collection(self, collection):
-        ''''''
-        raise NotImplementedError()
-
-    def append_item(self, item):
-        ''''''
-        if self._item_cache.has_key(item.item_id):
-            # This should be an actual error, some type of "collection already
-            # contains item". but since there is no actual error for that case,
-            # raise not implemented.
-            raise NotImplementedError()
+        try:
+            item_id = self._ids[index]
+            if self._item_cache.has_key(item_id):
+                return self._item_cache[item_id]
+            else:
+                item = get_item_class_from_id(item_id)(item_id)
+                self._item_cache[item_id] = item
+                return item
+        except IndexError:
+            raise IndexError()
         
-        self._ids.append(item.item_id)
-        self._item_cache[item.item_id] = item_instance
+    def add_item(self, item):
+        '''Add an item to this collection.'''
+        
+        self._ids += item.item_id
+        self._item_cache[item.item_id] = item
     
     def filter_type(self, item_type):
         '''Return a new item collection based on any item matching the type
@@ -401,22 +424,21 @@ class ItemCollection(object):
         
         return ItemCollection(matching_item_ids)
     
-    @classmethod
-    def new_from_type(cls, item_type):
-        ''''''
-        type_switch = {
-            ImageMap:al.query_services.scene.get_all_image_map_ids,
-        }
+    def update(self, collection):
+        '''Add a collection to this collection, ignoring any duplicates.'''
         
-        if type_switch.has_key(item_type):
-            return ItemCollection(type_switch[item_type]())
-        else:
-            # Eventually when all types are covered, this will be an actual
-            # informative error about how the type supplied does not exist.
-            # For now, its safe to assume they don't exist.
-            raise NotImplementedError()
+        self._ids = list(set(collection._ids).union(self._ids))
+        self._item_cache.update(collection._item_cache)
     
-    def new_from_types(self, item_type):
-        ''''''
-        raise NotImplementedError()
+    def update_selected(self, item_type=None):
+        '''Add the selected items to this collection, ignoring any duplicates.
+        '''
+        
+        if item_type is None:
+            item_ids = al.query.get_selected_item_ids(item_type._mtype)
+        else:
+            item_ids = al.query.get_selected_item_ids(item_type._mtype)
+        
+        if item_ids is not None:
+            self._ids = list(set(item_ids).union(self._ids))
         

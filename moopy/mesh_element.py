@@ -2,6 +2,7 @@
 
 # Standard
 import logging
+import warnings
 # Related
 import lx
 # Local
@@ -93,13 +94,14 @@ class Vertex(MeshElement):
         '''
         Again, this method will get nixed in favor of an OOP approach.
         '''
+        
         moopy.al.commands.vertex_map.set_vertex_value(
             map_name, self._index, weight)
 
 class MeshElementCollection(object):
     '''The base mesh element collection class.'''
     
-    def __init__(self, element_indices, *args, **kwargs):
+    def __init__(self, element_indices=None, *args, **kwargs):
         '''
         '''
         super(MeshElementCollection, self).__init__(*args, **kwargs)
@@ -130,6 +132,35 @@ class MeshElementCollection(object):
         collection.
         '''
     )
+    
+    def add_all(self, duplicate=False):
+        '''Add all the elements in current mesh item(s) to this
+        
+        @duplicate: If some or all of the selected elements being added to this
+        collection are already in this collection, setting this parameter to
+        True will add those elements anyway, "duplicating" their presence
+        in this collection.'''
+        
+        raise NotImplementedError()
+    
+    def add_selected(self, duplicate=False):
+        '''Add the selected elements to this collection.
+        
+        @duplicate: If some or all of the selected elements being added to this
+        collection are already in this collection, setting this parameter to
+        True will add those elements anyway, "duplicating" their presence
+        in this collection.
+        '''
+        raise NotImplementedError()
+    
+    def remove_selected(self, duplicates=True):
+        '''Remove the selected elements.
+        
+        @param duplicates: 
+        '''
+        
+        raise NotImplementedError()
+        
 
 class VertexCollection(MeshElementCollection):
     '''A collection of vertices'''
@@ -137,7 +168,8 @@ class VertexCollection(MeshElementCollection):
     def __init__(self, vertex_indices, *args, **kwargs):
         '''
         '''
-        super(VertexCollection, self).__init__(vertex_indices, *args, **kwargs)
+        super(VertexCollection, self).__init__(
+            element_indices=vertex_indices, *args, **kwargs)
     
     def __getitem__(self, key):
         ''''''
