@@ -404,12 +404,30 @@ class ItemCollection(object):
                 return item
         except IndexError:
             raise IndexError()
+    
+    def add_collection(self, collection):
+        '''Add a collection to this collection, ignoring any duplicates.'''
+        
+        self._ids = list(set(collection._ids).union(self._ids))
+        self._item_cache.update(collection._item_cache)
         
     def add_item(self, item):
         '''Add an item to this collection.'''
         
         self._ids += item.item_id
         self._item_cache[item.item_id] = item
+    
+    def add_selected(self, item_type=None):
+        '''Add the selected items to this collection, ignoring any duplicates.
+        '''
+        
+        if item_type is None:
+            item_ids = al.query.get_selected_item_ids(item_type._mtype)
+        else:
+            item_ids = al.query.get_selected_item_ids(item_type._mtype)
+        
+        if item_ids is not None:
+            self._ids = list(set(item_ids).union(self._ids))
     
     def filter_type(self, item_type):
         '''Return a new item collection based on any item matching the type
@@ -423,22 +441,4 @@ class ItemCollection(object):
                 matching_item_ids.append(item_id)
         
         return ItemCollection(matching_item_ids)
-    
-    def update(self, collection):
-        '''Add a collection to this collection, ignoring any duplicates.'''
-        
-        self._ids = list(set(collection._ids).union(self._ids))
-        self._item_cache.update(collection._item_cache)
-    
-    def update_selected(self, item_type=None):
-        '''Add the selected items to this collection, ignoring any duplicates.
-        '''
-        
-        if item_type is None:
-            item_ids = al.query.get_selected_item_ids(item_type._mtype)
-        else:
-            item_ids = al.query.get_selected_item_ids(item_type._mtype)
-        
-        if item_ids is not None:
-            self._ids = list(set(item_ids).union(self._ids))
         
